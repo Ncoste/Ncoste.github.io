@@ -1,10 +1,54 @@
-p{
-    font-size:20px;
-    color:red;
+/* Apply basic styles to the whole page */
+body {
+    margin: 0;
+    padding: 0;
 }
-.titleTag{
-    
+
+/* Style the header */
+header {
+    background-color: #f2f2f2;
+    padding: 20px;
 }
-#titleTag{
-    font-size:56px;
+.header-logo img {
+  width: 250px; /* Adjust the width as desired */
+  height: auto;
+}
+
+.gallery-title {
+  text-align: center;
+  font-weight: bold;
+}
+
+
+/* Style the link in the header */
+.header-link {
+    text-decoration: none;
+    color: #000;
+    font-size: 18px;
+}
+
+/* Style the gallery container */
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  margin-top: 30px;
+}
+
+.gallery img {
+  margin: 3px;
+  width: calc(33.33% - 20px); /* Set width for 3 images per row */
+  max-height: 500px; /* Adjust the max-height as needed */
+  object-fit: contain;
+}
+
+
+
+#top-right-link {
+  border: 1px solid white;
+  padding: 5px 10px;
+  background-color: white;
+  position: absolute;
+  top: 20px;
+  right: 20px;
 }

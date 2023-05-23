@@ -1,13 +1,115 @@
-
+<!DOCTYPE html>
+<html>
 <head>
-<link rel="stylesheet" href="style.css">
+    <title>Trailheadjourneys</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
-<!--
-    comment format
--->
+<body>
+    <header>
+  <a class="header-logo" href="#">
+    <img src="images/logo.jpg" alt="Logo">
+  </a>
+  <a class="header-link" href="https://www.example.com"></a>
+  <a class="header-link" id="top-right-link" href="https://www.example.com">Go to Main Page</a>
 
-<h2 id = "titleTag">Trailheadjourneys</h2>
-<a href="url">link text</a>
-<p> This is dummy text </p>
+
+  </header>
+
+    <h1 class="gallery-title">Stills Gallery</h1>
+
     
-<img src="img/1.jpg">
+    <div class="gallery">
+        <img src="images/2.jpg" alt="Image 2">
+        <img src="images/3.jpg" alt="Image 3">
+        <img src="images/5.jpg" alt="Image 3">
+        <img src="images/5.jpg" alt="Image 3">
+        <img src="images/5.jpg" alt="Image 3">
+        
+        
+        
+        
+    </div>
+    
+    <div class="slideshow-container">
+  <div class="slideshow"></div>
+  <a class="prev" onclick="prevSlide()">&#10094;</a>
+  <a class="next" onclick="nextSlide()">&#10095;</a>
+    </div>
+    
+    <script>
+    // Get all the images from the gallery
+const images = Array.from(document.querySelectorAll('.gallery img'));
+
+// Shuffle the images randomly
+const shuffledImages = shuffleArray(images);
+
+// Create a slideshow by selecting 3 random images
+const slideshowImages = shuffledImages.slice(0, 3);
+
+// Get the slideshow container element
+const slideshowContainer = document.querySelector('.slideshow');
+
+// Create and append image elements to the slideshow container
+slideshowImages.forEach(image => {
+  const slide = document.createElement('div');
+  slide.classList.add('slide');
+  slide.innerHTML = `<img src="${image.src}" alt="${image.alt}">`;
+  slideshowContainer.appendChild(slide);
+});
+
+// Set the initial slide index
+let currentSlideIndex = 0;
+
+// Function to display the current slide
+function showSlide(index) {
+  const slides = document.querySelectorAll('.slide');
+  
+  // Hide all slides
+  slides.forEach(slide => {
+    slide.style.display = 'none';
+  });
+  
+  // Display the current slide
+  slides[index].style.display = 'block';
+}
+
+// Function to show the previous slide
+function prevSlide() {
+  currentSlideIndex--;
+  if (currentSlideIndex < 0) {
+    currentSlideIndex = slideshowImages.length - 1;
+  }
+  showSlide(currentSlideIndex);
+}
+
+// Function to show the next slide
+function nextSlide() {
+  currentSlideIndex++;
+  if (currentSlideIndex >= slideshowImages.length) {
+    currentSlideIndex = 0;
+  }
+  showSlide(currentSlideIndex);
+}
+
+// Function to shuffle an array randomly
+function shuffleArray(array) {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
+
+// Display the initial slide
+showSlide(currentSlideIndex);
+    
+    
+    </script>
+
+
+
+
+
+</body>
+</html>
