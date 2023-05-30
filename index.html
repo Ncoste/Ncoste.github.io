@@ -21,11 +21,17 @@
     <div class="gallery">
         <img src="images/2.jpg" alt="Image 2">
         <img src="images/3.jpg" alt="Image 3">
-        <img src="images/5.jpg" alt="Image 3">
-        <img src="images/5.jpg" alt="Image 3">
-        <img src="images/5.jpg" alt="Image 3">
+        <img src="images/5.jpg" alt="Image 6">
+        <img src="images/7-min.jpg" alt="Image 5">
+        <img src="images/img8.jpg" alt="Image 4">
+        <img src="images/img9.jpg" alt="Image 6">
+        <img src="images/img10.jpg" alt="Image 6">
+        <img src="images/img11.jpg" alt="Image 6">
+        <img src="images/img12.jpg" alt="Image 6">
         
         
+        
+     <h1 class="gallery-title">Slideshow</h1>   
         
         
     </div>
@@ -49,7 +55,7 @@ const slideshowImages = shuffledImages.slice(0, 3);
 // Get the slideshow container element
 const slideshowContainer = document.querySelector('.slideshow');
 
-// Create and append image elements to the slideshow container
+// Create and add image elements to the slideshow container
 slideshowImages.forEach(image => {
   const slide = document.createElement('div');
   slide.classList.add('slide');
@@ -101,13 +107,16 @@ function shuffleArray(array) {
   return newArray;
 }
 
-// Display the initial slide
+// Displays the initial slide
 showSlide(currentSlideIndex);
     
+
+
+
     
     </script>
 
-
+</body>
 
 
 

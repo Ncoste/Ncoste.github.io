@@ -1,6 +1,6 @@
-/* Apply basic styles to the whole page */
+/* Applys basic styles to the whole page */
 body {
-    margin: 0;
+    margin: 2;
     padding: 0;
 }
 
@@ -38,7 +38,7 @@ header {
 .gallery img {
   margin: 3px;
   width: calc(33.33% - 20px); /* Set width for 3 images per row */
-  max-height: 500px; /* Adjust the max-height as needed */
+  max-height: 500px; /* Adjusts the max-height */
   object-fit: contain;
 }
 
@@ -52,3 +52,25 @@ header {
   top: 20px;
   right: 20px;
 }
+
+.slide img {
+  max-height: 500px;
+  text-align: center;
+}
+
+.prev,
+.next {
+  display: inline-block;
+  padding: 10px;
+  background-color: #002D62;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.prev:hover,
+.next:hover {
+  background-color: #555;
+}
+
+
