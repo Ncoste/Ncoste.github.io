@@ -104,6 +104,24 @@ textarea{resize:none;min-height:80px}
 .seg{display:flex;background:var(--card2);border-radius:12px;padding:3px;border:1px solid var(--line)}
 .seg button{flex:1;padding:9px;border-radius:9px;font-weight:700;color:var(--muted)}
 .seg button.on{background:var(--accent);color:var(--accent-ink)}
+.datenav{border-radius:12px;padding:4px 8px}
+.datenav:active{background:var(--card)}
+.planned{color:var(--accent)}
+.pickrow .check{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex:none}
+.pickrow .check.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.pickrow.dim{opacity:.45}
+.sticky-foot{position:sticky;bottom:-16px;margin:12px -16px -16px;padding:10px 16px calc(14px + env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--line)}
+.sticky-foot .btn:disabled{opacity:.4}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-grid.head span{text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:4px 0}
+.cal-day{position:relative;aspect-ratio:1;border-radius:12px;font-weight:600;font-size:16px;display:flex;align-items:center;justify-content:center;background:var(--card)}
+.cal-day.today{color:var(--accent);font-weight:800}
+.cal-day.sel{outline:2px solid var(--accent);outline-offset:-2px}
+.cal-day i{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:6px;height:6px;border-radius:50%}
+.cal-day i.dot{background:var(--accent)}
+.cal-day i.dot.planned{background:transparent;border:1.5px solid var(--accent)}
+i.legend{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);vertical-align:middle}
+i.legend.planned{background:transparent;border:1.5px solid var(--accent)}
 .toast{position:fixed;left:50%;bottom:calc(var(--tab-h) + env(safe-area-inset-bottom) + 14px);transform:translateX(-50%);background:var(--card2);border:1px solid var(--line);color:var(--text);padding:12px 16px;border-radius:14px;font-size:14px;font-weight:600;z-index:40;box-shadow:0 10px 30px rgba(0,0,0,.4);display:none;max-width:90vw;align-items:center;gap:12px}
 .toast.show{display:flex}
 .toast button{color:var(--accent);font-weight:800}
@@ -129,7 +147,7 @@ textarea{resize:none;min-height:80px}
    Lift Log — personal resistance-training logger
    All data lives in localStorage on this device.
    ============================================================ */
-const APP_VERSION = '0.1.0';
+const APP_VERSION = '0.2.0';
 const KEY = 'liftlog.v1';
 const MUSCLES = ['Chest','Back','Shoulders','Biceps','Triceps','Forearms','Quads','Hamstrings','Glutes','Calves','Core','Full body','Other'];
 
@@ -198,16 +216,18 @@ function renderToday(){
   const d=ui.date, x=state.days[d]||{lifts:[],cardio:[],note:''}, st=dayStats(d), isToday=d===todayStr();
   let h = `<div class="topbar">
     <button class="icon" data-act="prevDay">‹</button>
-    <div class="datenav"><div><div class="d">${relDay(d)}<span class="sub">${fmtDate(d,{month:'long',day:'numeric',year:'numeric'})}</span></div></div></div>
+    <button class="datenav" data-act="openCalendar"><div><div class="d">${relDay(d)}<span class="sub">${fmtDate(d,{month:'long',day:'numeric',year:'numeric'})} ▾</span></div></div></button>
     <button class="icon" data-act="nextDay">›</button>
   </div>
   <div class="row" style="margin-bottom:6px"><div class="chips">${isToday?'':'<button class="chip accent" data-act="goToday">Jump to today</button>'}</div><button class="icon sm" data-act="settings" title="Settings">⚙︎</button></div>`;
 
-  h += `<div class="section"><h2>Workout</h2><span class="meta">${st.sets? `${st.sets} sets · ${fmtNum(st.vol)} ${unit()}`:''}</span></div>`;
+  const planned = x.lifts.length && !st.sets;
+  h += `<div class="section"><h2>Workout</h2><span class="meta">${st.sets? `${st.sets} sets · ${fmtNum(st.vol)} ${unit()}` : planned ? `<span class="planned">Planned · ${x.lifts.length} exercise${x.lifts.length!==1?'s':''}</span>` : ''}</span></div>`;
   if(!x.lifts.length){
-    h += `<div class="card"><div class="empty"><b>Nothing logged yet</b>Add an exercise to start${state.templates.length?', or start from a template':''}.</div>`;
+    const future=d>todayStr();
+    h += `<div class="card"><div class="empty"><b>${future?'Nothing planned yet':'Nothing logged yet'}</b>${future?'Pick the exercises you want to do this day':'Add exercises to start'}${state.templates.length?', or start from a template':''}.</div>`;
     if(state.templates.length){ h += `<div class="chips" style="justify-content:center;margin-bottom:12px">${state.templates.map(t=>`<button class="chip" data-act="applyTemplate" data-id="${t.id}">${esc(t.name)}</button>`).join('')}</div>`; }
-    h += `<button class="btn primary" data-act="addExercise">+ Add exercise</button></div>`;
+    h += `<button class="btn primary" data-act="addExercise">+ ${future?'Plan exercises':'Add exercises'}</button></div>`;
   } else {
     x.lifts.forEach((l,li) => {
       const e=exById(l.exerciseId); const last=lastSession(l.exerciseId, d);
@@ -225,7 +245,7 @@ function renderToday(){
       });
       h += `</div><button class="btn ghost" style="margin-top:10px" data-act="addSet" data-li="${li}">+ Add set</button></div>`;
     });
-    h += `<button class="btn" data-act="addExercise">+ Add exercise</button>
+    h += `<button class="btn" data-act="addExercise">+ Add exercises</button>
           <button class="btn ghost" data-act="saveTemplate">Save this workout as a template</button>`;
   }
 
@@ -244,8 +264,14 @@ function renderHistory(){
   let h = `<div class="topbar"><h1>History</h1></div>
   <div class="section" style="margin-top:0"><h2>This week</h2><span class="meta">from ${fmtDate(weekStart(todayStr()),{month:'short',day:'numeric'})}</span></div>
   <div class="stats"><div class="stat"><div class="v">${w.sessions}</div><div class="l">Sessions</div></div><div class="stat"><div class="v">${w.sets}</div><div class="l">Sets</div></div><div class="stat"><div class="v">${w.vol>=10000? (w.vol/1000).toFixed(1)+'k':fmtNum(w.vol)}</div><div class="l">${unit()} moved</div></div><div class="stat"><div class="v">${w.cardioMin}</div><div class="l">Cardio min</div></div></div>`;
+  const t=todayStr();
+  const upcoming=Object.keys(state.days).sort().filter(d=>d>=t && state.days[d].lifts.length && !dayStats(d).sets);
+  if(upcoming.length){
+    h += `<div class="section"><h2>Planned</h2></div>` + upcoming.map(d=>`<div class="card tap" data-act="openDay" data-date="${d}"><div class="row"><div class="title">${d===t?'Today':fmtDate(d)}</div><span class="planned sub">Planned ›</span></div><div class="sub" style="margin-top:4px;color:var(--text);opacity:.8">${esc(state.days[d].lifts.map(l=>exById(l.exerciseId)?.name).filter(Boolean).join(', '))}</div></div>`).join('');
+  }
   const dates=datesDesc().filter(d=>{ const s=dayStats(d); return s.sets||s.cardioMin||(state.days[d].note||'').trim(); });
   if(!dates.length) return h + `<div class="card"><div class="empty"><b>No history yet</b>Logged days will show up here.</div></div>`;
+  h += `<div class="section" style="margin-bottom:0"><h2>Logged</h2></div>`;
   let month='';
   for(const d of dates){
     const m=fmtDate(d,{month:'long',year:'numeric'}); if(m!==month){ month=m; h+=`<div class="monthhead">${m}</div>`; }
@@ -289,20 +315,43 @@ function closeSheet(){ $('#overlay').classList.remove('open'); $('#sheet').inner
 $('#overlay').addEventListener('click', e => { if(e.target===$('#overlay')) closeSheet(); });
 
 function pickerSheet(){
-  ui.pick='';
-  openSheet(`<h3>Add exercise</h3>
+  ui.pick=''; ui.picked=new Set();
+  const future=ui.date>todayStr();
+  openSheet(`<h3>${future?'Plan exercises':'Add exercises'}</h3>
     <input type="search" placeholder="Search your exercises" data-bind="pick" autocomplete="off">
     <div id="pickList" style="margin-top:8px"></div>
-    <button class="btn" style="margin-top:12px" data-act="newExercise">+ Create a new exercise</button>`);
+    <button class="btn ghost" style="margin-top:12px" data-act="newExercise">+ Create a new exercise</button>
+    <div class="sticky-foot"><button class="btn primary" id="pickDone" data-act="pickDone" disabled>Select exercises</button></div>`);
   renderPickList();
 }
 function renderPickList(){
   const el=$('#pickList'); if(!el) return;
-  const q=ui.pick.toLowerCase();
+  const q=ui.pick.toLowerCase(); const inDay=new Set((state.days[ui.date]?.lifts||[]).map(l=>l.exerciseId));
   const list=state.exercises.filter(e=>!q||e.name.toLowerCase().includes(q)||(e.muscle||'').toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name));
   if(!list.length){ el.innerHTML=`<div class="sub" style="padding:10px 2px">${state.exercises.length?'No matches.':'No exercises yet — create one below.'}</div>`; return; }
   const groups={}; for(const e of list){ (groups[e.muscle||'Other'] ||= []).push(e); }
-  el.innerHTML = Object.keys(groups).sort((a,b)=>MUSCLES.indexOf(a)-MUSCLES.indexOf(b)).map(g=>`<div class="grouphead">${esc(g)}</div>`+groups[g].map(e=>`<div class="exrow" data-act="pickExercise" data-id="${e.id}"><div class="title" style="font-size:16px">${esc(e.name)}</div><span class="sub">${esc(e.equipment||'')}</span></div>`).join('')).join('');
+  el.innerHTML = Object.keys(groups).sort((a,b)=>MUSCLES.indexOf(a)-MUSCLES.indexOf(b)).map(g=>`<div class="grouphead">${esc(g)}</div>`+groups[g].map(e=>{ const on=ui.picked.has(e.id), already=inDay.has(e.id);
+    return `<div class="exrow pickrow ${already?'dim':''}" data-act="togglePick" data-id="${e.id}"><div><div class="title" style="font-size:16px">${esc(e.name)}</div><span class="sub">${already?'Already in this workout':esc(e.equipment||'')}</span></div><span class="check ${on?'on':''}">${on?'✓':''}</span></div>`; }).join('')).join('');
+  updatePickBtn();
+}
+function updatePickBtn(){ const b=$('#pickDone'); if(!b) return; const n=ui.picked.size; b.disabled=!n; b.textContent = n? `Add ${n} exercise${n!==1?'s':''}` : 'Select exercises'; }
+
+function calendarSheet(month){ // month: 'YYYY-MM'
+  ui.calMonth = month || ui.date.slice(0,7);
+  const [y,m]=ui.calMonth.split('-').map(Number); const first=new Date(y,m-1,1); const t=todayStr();
+  const daysIn=new Date(y,m,0).getDate(); const lead=(first.getDay()+6)%7; // Monday first
+  const prev=localISO(new Date(y,m-2,1)).slice(0,7), next=localISO(new Date(y,m,1)).slice(0,7);
+  let cells='';
+  for(let i=0;i<lead;i++) cells+='<span></span>';
+  for(let d=1; d<=daysIn; d++){
+    const iso=`${y}-${z(m)}-${z(d)}`; const st=dayStats(iso); const x=state.days[iso];
+    const logged=st.sets>0||st.cardioMin>0, planned=!logged && x && x.lifts.length>0;
+    cells+=`<button class="cal-day ${iso===t?'today':''} ${iso===ui.date?'sel':''}" data-act="calPick" data-date="${iso}">${d}<i class="${logged?'dot':planned?'dot planned':''}"></i></button>`;
+  }
+  openSheet(`<div class="row" style="margin-bottom:8px"><button class="icon" data-act="calMonth" data-m="${prev}">‹</button><h3 style="margin:0">${first.toLocaleDateString(undefined,{month:'long',year:'numeric'})}</h3><button class="icon" data-act="calMonth" data-m="${next}">›</button></div>
+    <div class="cal-grid head">${['M','T','W','T','F','S','S'].map(x=>`<span>${x}</span>`).join('')}</div>
+    <div class="cal-grid">${cells}</div>
+    <div class="row" style="margin-top:14px"><span class="sub"><i class="legend"></i> logged &nbsp; <i class="legend planned"></i> planned</span><button class="chip" data-act="calPick" data-date="${t}">Today</button></div>`);
 }
 function exerciseSheet(e){
   const isNew=!e; e=e||{name:'',muscle:'',equipment:''};
@@ -379,7 +428,11 @@ const act = {
   addExercise(){ pickerSheet(); },
   newExercise(){ exerciseSheet(null); },
   openExercise(el){ exerciseSheet(exById(el.dataset.id)); },
-  pickExercise(el){ addLift(el.dataset.id); closeSheet(); render(); },
+  togglePick(el){ const id=el.dataset.id; ui.picked.has(id)? ui.picked.delete(id) : ui.picked.add(id); renderPickList(); },
+  pickDone(){ let n=0; for(const id of ui.picked){ if(addLift(id, true)) n++; } closeSheet(); render(); if(n) toast(`Added ${n} exercise${n!==1?'s':''}`); },
+  openCalendar(){ calendarSheet(); },
+  calMonth(el){ calendarSheet(el.dataset.m); },
+  calPick(el){ ui.date=el.dataset.date; ui.followToday=ui.date===todayStr(); closeSheet(); render(); },
   addSet(el){ const l=day(ui.date).lifts[+el.dataset.li]; const prev=l.sets[l.sets.length-1]; const last=lastSession(l.exerciseId, ui.date); const ref=last?.sets[l.sets.length];
     l.sets.push({w: prev? prev.w : (ref?ref.w:null), r: prev? prev.r : (ref?ref.r:null)}); save(); render(); },
   delSet(el){ const l=day(ui.date).lifts[+el.dataset.li]; l.sets.splice(+el.dataset.si,1); save(); render(); },
@@ -403,7 +456,9 @@ const act = {
   clearAll(){ if(!confirm('Erase ALL exercises, workouts, and goals from this phone? This cannot be undone.')) return; if(!confirm('Really erase everything?')) return; state=fresh(); save(); closeSheet(); render(); },
   closeSheet(){ closeSheet(); },
 };
-function addLift(exId){ const x=day(ui.date,true); if(x.lifts.some(l=>l.exerciseId===exId)){ toast('Already in this workout'); return; } const last=lastSession(exId, ui.date); x.lifts.push({exerciseId:exId, sets:[{w:last?last.sets[0].w:null, r:last?last.sets[0].r:null}]}); save(); }
+function addLift(exId, quiet){ const x=day(ui.date,true); if(x.lifts.some(l=>l.exerciseId===exId)){ if(!quiet) toast('Already in this workout'); prune(ui.date); return false; }
+  const last=lastSession(exId, ui.date); const n=last? Math.max(1,last.sets.length) : 1;
+  x.lifts.push({exerciseId:exId, sets:Array.from({length:n},(_,i)=>({w:null,r:null}))}); save(); return true; }
 
 const forms = {
   exercise(fd, f){ const id=f.dataset.id; const name=fd.get('name').trim(); if(!name) return;
