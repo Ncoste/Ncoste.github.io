@@ -1,6 +1,6 @@
 /* Lift Log service worker — caches the app shell so it opens offline.
    Bump VERSION on every deploy so phones pick up the new build. */
-const VERSION = '0.2.0';
+const VERSION = '0.2.1';
 const CACHE = 'liftlog-' + VERSION;
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png'];
 
