@@ -19,7 +19,8 @@
   --danger:#ff5d5d; --ok:#4ade80;
   --r:16px; --tab-h:64px;
 }
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;scrollbar-width:none}
+*::-webkit-scrollbar{display:none;width:0;height:0}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;font-size:16px;line-height:1.35;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
 body{min-height:100vh;min-height:100dvh}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -152,7 +153,7 @@ i.legend.planned{background:transparent;border:1.5px solid var(--accent)}
    Lift Log — personal resistance-training logger
    All data lives in localStorage on this device.
    ============================================================ */
-const APP_VERSION = '0.3.0';
+const APP_VERSION = '0.3.1';
 const KEY = 'liftlog.v1';
 const MUSCLES = ['Chest','Back','Shoulders','Biceps','Triceps','Forearms','Quads','Hamstrings','Glutes','Calves','Core','Full body','Other'];
 
@@ -229,11 +230,12 @@ function goalTitle(g){
 
 /* ---------- render ---------- */
 const $ = s => document.querySelector(s);
-function render(){
+function render(top){
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab===ui.tab));
   const app=$('#app');
+  const y=window.scrollY;
   app.innerHTML = {today:renderToday, history:renderHistory, exercises:renderExercises, goals:renderGoals}[ui.tab]();
-  window.scrollTo(0,0);
+  if(top) window.scrollTo(0,0); else window.scrollTo(0,y);
 }
 
 function renderToday(){
@@ -446,11 +448,11 @@ function settingsSheet(){
 
 /* ---------- actions ---------- */
 const act = {
-  tab(el){ ui.tab=el.dataset.tab; render(); },
-  prevDay(){ ui.date=addDays(ui.date,-1); ui.followToday=false; render(); },
-  nextDay(){ ui.date=addDays(ui.date,1); ui.followToday=false; render(); },
-  goToday(){ ui.date=todayStr(); ui.followToday=true; render(); },
-  openDay(el){ ui.date=el.dataset.date; ui.followToday=ui.date===todayStr(); ui.tab='today'; render(); },
+  tab(el){ if(ui.tab===el.dataset.tab){ window.scrollTo({top:0,behavior:'smooth'}); return; } ui.tab=el.dataset.tab; render(true); },
+  prevDay(){ ui.date=addDays(ui.date,-1); ui.followToday=false; render(true); },
+  nextDay(){ ui.date=addDays(ui.date,1); ui.followToday=false; render(true); },
+  goToday(){ ui.date=todayStr(); ui.followToday=true; render(true); },
+  openDay(el){ ui.date=el.dataset.date; ui.followToday=ui.date===todayStr(); ui.tab='today'; render(true); },
   settings(){ settingsSheet(); },
   addExercise(){ pickerSheet(); },
   newExercise(){ exerciseSheet(null); },
@@ -461,7 +463,7 @@ const act = {
   async removePhoto(){ if(ui.editingId){ await setPhoto(ui.editingId,null); } ui.pendingPhoto=null; const b=$('#photoBox'); if(b) b.outerHTML=photoBox(null); },
   openCalendar(){ calendarSheet(); },
   calMonth(el){ calendarSheet(el.dataset.m); },
-  calPick(el){ ui.date=el.dataset.date; ui.followToday=ui.date===todayStr(); closeSheet(); render(); },
+  calPick(el){ ui.date=el.dataset.date; ui.followToday=ui.date===todayStr(); closeSheet(); render(true); },
   addSet(el){ const l=day(ui.date).lifts[+el.dataset.li]; const prev=l.sets[l.sets.length-1]; const last=lastSession(l.exerciseId, ui.date); const ref=last?.sets[l.sets.length];
     l.sets.push({w: prev? prev.w : (ref?ref.w:null), r: prev? prev.r : (ref?ref.r:null)}); save(); render(); },
   delSet(el){ const l=day(ui.date).lifts[+el.dataset.li]; l.sets.splice(+el.dataset.si,1); save(); render(); },
