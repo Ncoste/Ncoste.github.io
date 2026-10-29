@@ -168,7 +168,7 @@ i.legend.planned{background:transparent;border:1.5px solid var(--accent)}
    Lift Log — personal resistance-training logger
    All data lives in localStorage on this device.
    ============================================================ */
-const APP_VERSION = '0.4.1';
+const APP_VERSION = '0.4.2';
 const KEY = 'liftlog.v1';
 const MUSCLES = ['Chest','Back','Shoulders','Biceps','Triceps','Forearms','Quads','Hamstrings','Glutes','Calves','Core','Full body','Other'];
 
@@ -255,15 +255,15 @@ function periodChips(sel, actName){ return `<div class="chips period">${PERIODS.
 function periodDays(k){ return (PERIODS.find(x=>x[0]===k)||PERIODS[0])[1]; }
 
 function rangeStats(from){
-  let sessions=0,sets=0,vol=0,cardioMin=0; const byMuscle={}; const t=todayStr();
+  let sessions=0,sets=0,vol=0,cardioMin=0; const byMuscle={}, byExercise={}; const t=todayStr();
   for(const d of Object.keys(state.days)){ if(d<from||d>t) continue; const s=dayStats(d); if(s.sets) sessions++; sets+=s.sets; vol+=s.vol; cardioMin+=s.cardioMin;
-    for(const l of state.days[d].lifts){ if(!l.sets.some(filled)) continue; const e=exById(l.exerciseId); const m=(e&&e.muscle)||'Other'; byMuscle[m]=(byMuscle[m]||0)+1; } }
-  return {sessions,sets,vol,cardioMin,byMuscle};
+    for(const l of state.days[d].lifts){ if(!l.sets.some(filled)) continue; const e=exById(l.exerciseId); const m=(e&&e.muscle)||'Other'; byMuscle[m]=(byMuscle[m]||0)+1; if(e) byExercise[e.name]=(byExercise[e.name]||0)+1; } }
+  return {sessions,sets,vol,cardioMin,byMuscle,byExercise};
 }
-function muscleBreakdown(byMuscle){
-  const rows=Object.entries(byMuscle).sort((a,b)=>b[1]-a[1]); if(!rows.length) return '';
-  const total=rows.reduce((a,r)=>a+r[1],0), max=rows[0][1];
-  return `<div class="card"><div class="row" style="margin-bottom:8px"><span class="sub">Exercises completed by muscle group</span><span class="sub num">${total}</span></div>
+function barList(title, counts, limit){
+  let rows=Object.entries(counts).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])); if(!rows.length) return '';
+  const total=rows.reduce((a,r)=>a+r[1],0), max=rows[0][1]; if(limit) rows=rows.slice(0,limit);
+  return `<div class="card"><div class="row" style="margin-bottom:8px"><span class="sub">${title}</span><span class="sub num">${total}</span></div>
     ${rows.map(([m,n])=>`<div class="mrow"><span class="ml">${esc(m)}</span><span class="mbar"><i style="width:${Math.round(n/max*100)}%"></i></span><span class="mv num">${n}</span></div>`).join('')}</div>`;
 }
 
@@ -370,7 +370,8 @@ function renderHistory(){
   let h = `<div class="topbar"><h1>History</h1></div>
   <div class="chips period" style="margin-bottom:12px"><button class="chip ${ui.period==='W'?'accent':''}" data-act="histPeriod" data-p="W">Week</button>${PERIODS.map(([k])=>`<button class="chip ${k===ui.period?'accent':''}" data-act="histPeriod" data-p="${k}">${k}</button>`).join('')}</div>
   <div class="stats"><div class="stat"><div class="v">${w.sessions}</div><div class="l">Sessions</div></div><div class="stat"><div class="v">${w.sets}</div><div class="l">Sets</div></div><div class="stat"><div class="v">${w.vol>=10000? (w.vol/1000).toFixed(1)+'k':fmtNum(w.vol)}</div><div class="l">${unit()} moved</div></div><div class="stat"><div class="v">${w.cardioMin}</div><div class="l">Cardio min</div></div></div>
-  ${muscleBreakdown(w.byMuscle)}`;
+  ${barList('Exercises completed by muscle group', w.byMuscle)}
+  ${barList('Top exercises · times logged', w.byExercise, 5)}`;
   const t=todayStr();
   const upcoming=Object.keys(state.days).sort().filter(d=>d>=t && state.days[d].lifts.length && !dayStats(d).sets);
   if(upcoming.length){
