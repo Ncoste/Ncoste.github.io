@@ -168,7 +168,7 @@ i.legend.planned{background:transparent;border:1.5px solid var(--accent)}
    Lift Log — personal resistance-training logger
    All data lives in localStorage on this device.
    ============================================================ */
-const APP_VERSION = '0.4.0';
+const APP_VERSION = '0.4.1';
 const KEY = 'liftlog.v1';
 const MUSCLES = ['Chest','Back','Shoulders','Biceps','Triceps','Forearms','Quads','Hamstrings','Glutes','Calves','Core','Full body','Other'];
 
@@ -555,8 +555,7 @@ const act = {
   openCalendar(){ calendarSheet(); },
   calMonth(el){ calendarSheet(el.dataset.m); },
   calPick(el){ ui.date=el.dataset.date; ui.followToday=ui.date===todayStr(); closeSheet(); render(true); },
-  addSet(el){ const l=day(ui.date).lifts[+el.dataset.li]; const prev=l.sets[l.sets.length-1]; const last=lastSession(l.exerciseId, ui.date); const ref=last?.sets[l.sets.length];
-    l.sets.push({w: prev? prev.w : (ref?ref.w:null), r: prev? prev.r : (ref?ref.r:null)}); save(); render(); },
+  addSet(el){ const l=day(ui.date).lifts[+el.dataset.li]; l.sets.push({w:null, r:null}); save(); render(); },
   delSet(el){ const l=day(ui.date).lifts[+el.dataset.li]; l.sets.splice(+el.dataset.si,1); save(); render(); },
   toggleDone(el){ const s=day(ui.date).lifts[+el.dataset.li].sets[+el.dataset.si]; s.done=!s.done; save(); render(); },
   removeLift(el){ const x=day(ui.date); const l=x.lifts[+el.dataset.li]; const e=exById(l.exerciseId); if(l.sets.some(filled) && !confirm(`Remove ${e?e.name:'this exercise'} and its sets from this day?`)) return; x.lifts.splice(+el.dataset.li,1); prune(ui.date); save(); render(); },
